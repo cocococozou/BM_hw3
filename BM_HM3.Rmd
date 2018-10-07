@@ -1,0 +1,95 @@
+---
+title: "BM_HW3"
+author: "Coco"
+date: "10/6/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+##Problem 2
+
+#1 
+The first question is to assess if their body mass index (BMI) has changed 6 years after quitting smoking. Perform an appropriate hypothesis test and interpret your findings.
+
+
+```{r}
+heavysmoke_df <- read_csv(file = "./data/HeavySmoke.csv") 
+heavysmoke_df = janitor::clean_names(heavysmoke_df) 
+t.test(heavysmoke_df$bmi_6yrs,heavysmoke_df$bmi_base,paired = T)
+```
+
+#2
+The investigators suspected an overall change in weight over the years, so they decided toenroll a control group of 50-64 years of age that never smoked (data NeverSmoke.csv). Perform an appropriate test to compare the BMI changes between women that quit smoking and women who never smoked. Interpret the findings.
+
+```{r}
+neversmoke_df <- read_csv(file = "./data/NeverSmoke.csv") %>% 
+  janitor::clean_names()
+
+diff_heavy = heavysmoke_df$bmi_6yrs - heavysmoke_df$bmi_base
+diff_never = neversmoke_df$bmi_6yrs - neversmoke_df$bmi_base
+
+var.test(diff_heavy,diff_never,alternative = "two.sided")
+
+res = t.test(diff_heavy,diff_never,var.equal = FALSE, paired = FALSE)
+names(res)
+```
+
+p-value = 0.105 
+not enough evidence to reject the Ho.
+
+#3 
+
+#4
+```{r}
+ power.t.test(power = .90, delta = 1.3, sd=1.75, sig.level = 0.05, alternative = c("two.sided"))
+ power.t.test(power = .80, delta = 1.3, sd=1.75, sig.level = 0.05, alternative = c("two.sided"))
+  power.t.test(power = .90, delta = 1.3, sd=1.75, sig.level = 0.025, alternative = c("two.sided"))
+   power.t.test(power = .80, delta = 1.3, sd=1.75, sig.level = 0.025, alternative = c("two.sided"))
+```
+
+## Problem 3
+
+```{r}
+knee_df = read_csv(file = "./data/Knee.csv") %>% 
+  janitor::clean_names()
+summary(knee_df$below)
+summary(knee_df$average)
+summary(knee_df$above)
+
+knee_df = gather(knee_df, key = type, value = value, below:above) %>% 
+  filter(!is.na(value)) 
+knee_df$type=as_factor(knee_df$type)
+
+res <- aov(value~type,data = knee_df)
+summary(res)
+qf(0.01, df1 = 2, df2 = 22)
+```
+
+perform pairwise comparisons with the appropriate adjustments (Bonferroni, Tukey, and Dunnett – ‘below average’ as reference)
+```{r}
+pairwise.t.test(knee_df$value,knee_df$type,p.adjust.method = 'bonferroni')
+TukeyHSD(res)
+library(multcomp)
+dunnetttest<-glht(res, linfct=mcp(type="Dunnett"))
+summary(dunnetttest)
+```
+
+##Problem 4
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
