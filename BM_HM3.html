@@ -141,7 +141,14 @@ $(document).ready(function () {
 ##   BMI_base = col_double(),
 ##   BMI_6yrs = col_double()
 ## )</code></pre>
-<pre class="r"><code>heavysmoke_df = janitor::clean_names(heavysmoke_df) 
+<pre class="r"><code>heavysmoke_df = janitor::clean_names(heavysmoke_df) %&gt;% 
+  mutate(diff = bmi_6yrs-bmi_base) %&gt;% 
+  mutate(mean = sum(diff)/length(bmi_6yrs)) %&gt;% 
+  mutate(sd = (mean - diff)^2)
+
+s_d_1= sqrt(sum((heavysmoke_df$sd))/(length(heavysmoke_df$id)-1))
+t_statistics = 3.36 / (s_d_1/sqrt(9))
+t_critical = qt(0.975,9)
 t.test(heavysmoke_df$bmi_6yrs,heavysmoke_df$bmi_base,paired = T)</code></pre>
 <pre><code>## 
 ##  Paired t-test
@@ -159,15 +166,26 @@ t.test(heavysmoke_df$bmi_6yrs,heavysmoke_df$bmi_base,paired = T)</code></pre>
 <h1>2</h1>
 <p>The investigators suspected an overall change in weight over the years, so they decided toenroll a control group of 50-64 years of age that never smoked (data NeverSmoke.csv). Perform an appropriate test to compare the BMI changes between women that quit smoking and women who never smoked. Interpret the findings.</p>
 <pre class="r"><code>neversmoke_df &lt;- read_csv(file = &quot;./data/NeverSmoke.csv&quot;) %&gt;% 
-  janitor::clean_names()</code></pre>
+  janitor::clean_names() %&gt;% 
+  mutate(diff = bmi_6yrs-bmi_base) %&gt;% 
+  mutate(mean = sum(diff)/length(bmi_6yrs)) %&gt;% 
+  mutate(sd = (mean - diff)^2)</code></pre>
 <pre><code>## Parsed with column specification:
 ## cols(
 ##   ID = col_integer(),
 ##   BMI_base = col_double(),
 ##   BMI_6yrs = col_double()
 ## )</code></pre>
-<pre class="r"><code>diff_heavy = heavysmoke_df$bmi_6yrs - heavysmoke_df$bmi_base
+<pre class="r"><code>s_d_2 = sqrt(sum((neversmoke_df$sd))/(length(neversmoke_df$id)-1))
+s_sqr = (9*s_d_1^2+9*s_d_2^2)/(18)
+
+t_stat = (3.36 - 1.55) / (sqrt(s_sqr)*sqrt(1/9+1/9))
+t_crit = qt(0.975,18)
+
+diff_heavy = heavysmoke_df$bmi_6yrs - heavysmoke_df$bmi_base
 diff_never = neversmoke_df$bmi_6yrs - neversmoke_df$bmi_base
+
+f_crit=qf(0.975,9,9)
 
 var.test(diff_heavy,diff_never,alternative = &quot;two.sided&quot;)</code></pre>
 <pre><code>## 

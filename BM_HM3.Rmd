@@ -2,7 +2,7 @@
 title: "BM_HW3"
 author: "Coco"
 date: "10/6/2018"
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -18,7 +18,14 @@ The first question is to assess if their body mass index (BMI) has changed 6 yea
 
 ```{r}
 heavysmoke_df <- read_csv(file = "./data/HeavySmoke.csv") 
-heavysmoke_df = janitor::clean_names(heavysmoke_df) 
+heavysmoke_df = janitor::clean_names(heavysmoke_df) %>% 
+  mutate(diff = bmi_6yrs-bmi_base) %>% 
+  mutate(mean = sum(diff)/length(bmi_6yrs)) %>% 
+  mutate(sd = (mean - diff)^2)
+
+s_d_1= sqrt(sum((heavysmoke_df$sd))/(length(heavysmoke_df$id)-1))
+t_statistics = 3.36 / (s_d_1/sqrt(9))
+t_critical = qt(0.975,9)
 t.test(heavysmoke_df$bmi_6yrs,heavysmoke_df$bmi_base,paired = T)
 ```
 
@@ -27,10 +34,21 @@ The investigators suspected an overall change in weight over the years, so they 
 
 ```{r}
 neversmoke_df <- read_csv(file = "./data/NeverSmoke.csv") %>% 
-  janitor::clean_names()
+  janitor::clean_names() %>% 
+  mutate(diff = bmi_6yrs-bmi_base) %>% 
+  mutate(mean = sum(diff)/length(bmi_6yrs)) %>% 
+  mutate(sd = (mean - diff)^2)
+
+s_d_2 = sqrt(sum((neversmoke_df$sd))/(length(neversmoke_df$id)-1))
+s_sqr = (9*s_d_1^2+9*s_d_2^2)/(18)
+
+t_stat = (3.36 - 1.55) / (sqrt(s_sqr)*sqrt(1/9+1/9))
+t_crit = qt(0.975,18)
 
 diff_heavy = heavysmoke_df$bmi_6yrs - heavysmoke_df$bmi_base
 diff_never = neversmoke_df$bmi_6yrs - neversmoke_df$bmi_base
+
+f_crit=qf(0.975,9,9)
 
 var.test(diff_heavy,diff_never,alternative = "two.sided")
 
