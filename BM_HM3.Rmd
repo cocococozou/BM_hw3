@@ -1,22 +1,19 @@
 ---
-title: "BM_HW3"
-author: "Coco"
-date: "10/6/2018"
 output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(multcomp)
 ```
 
 ##Problem 2
 
-#1 
-The first question is to assess if their body mass index (BMI) has changed 6 years after quitting smoking. Perform an appropriate hypothesis test and interpret your findings.
+Here is the **code chunk** to do the calculation in Problem 2
 
-
-```{r}
+#1
+```{r eval = FALSE}
 heavysmoke_df <- read_csv(file = "./data/HeavySmoke.csv") 
 heavysmoke_df = janitor::clean_names(heavysmoke_df) %>% 
   mutate(diff = bmi_6yrs-bmi_base) %>% 
@@ -30,9 +27,8 @@ t.test(heavysmoke_df$bmi_6yrs,heavysmoke_df$bmi_base,paired = T)
 ```
 
 #2
-The investigators suspected an overall change in weight over the years, so they decided toenroll a control group of 50-64 years of age that never smoked (data NeverSmoke.csv). Perform an appropriate test to compare the BMI changes between women that quit smoking and women who never smoked. Interpret the findings.
 
-```{r}
+```{r eval = FALSE}
 neversmoke_df <- read_csv(file = "./data/NeverSmoke.csv") %>% 
   janitor::clean_names() %>% 
   mutate(diff = bmi_6yrs-bmi_base) %>% 
@@ -41,81 +37,111 @@ neversmoke_df <- read_csv(file = "./data/NeverSmoke.csv") %>%
 
 s_d_2 = sqrt(sum((neversmoke_df$sd))/(length(neversmoke_df$id)-1))
 s_sqr = (9*s_d_1^2+9*s_d_2^2)/(18)
-
 t_stat = (3.36 - 1.55) / (sqrt(s_sqr)*sqrt(1/9+1/9))
 t_crit = qt(0.975,18)
-
 diff_heavy = heavysmoke_df$bmi_6yrs - heavysmoke_df$bmi_base
 diff_never = neversmoke_df$bmi_6yrs - neversmoke_df$bmi_base
-
 f_crit=qf(0.975,9,9)
-
 var.test(diff_heavy,diff_never,alternative = "two.sided")
-
 res = t.test(diff_heavy,diff_never,var.equal = FALSE, paired = FALSE)
-names(res)
 ```
 
 #4
-```{r}
- power.t.test(power = .90, delta = 3.0, sd=2.0, sig.level = 0.05, alternative = c("two.sided"))
- power.t.test(power = .80, delta = 3.0, sd=2.0, sig.level = 0.05, alternative = c("two.sided"))
-  power.t.test(power = .90, delta = 3.0, sd=2.0, sig.level = 0.025, alternative = c("two.sided"))
-   power.t.test(power = .80, delta = 3.0, sd=2.0, sig.level = 0.025, alternative = c("two.sided"))
-    power.t.test(power = .90, delta = 1.7, sd=1.5, sig.level = 0.05, alternative = c("two.sided"))
-     power.t.test(power = .80, delta = 1.7, sd=1.5, sig.level = 0.05, alternative = c("two.sided"))
-     power.t.test(power = .90, delta = 1.7, sd=1.5, sig.level = 0.025, alternative = c("two.sided"))
-     power.t.test(power = .80, delta = 1.7, sd=1.5, sig.level = 0.025, alternative = c("two.sided"))
+```{r eval = FALSE}
+power.t.test(power = .90, delta = 3.0, sd=2.0, sig.level = 0.05, alternative = c("two.sided"))
+power.t.test(power = .80, delta = 3.0, sd=2.0, sig.level = 0.05, alternative = c("two.sided"))
+power.t.test(power = .90, delta = 3.0, sd=2.0, sig.level = 0.025, alternative = c("two.sided"))
+power.t.test(power = .80, delta = 3.0, sd=2.0, sig.level = 0.025, alternative = c("two.sided"))
+power.t.test(power = .90, delta = 1.7, sd=1.5, sig.level = 0.05, alternative = c("two.sided"))
+power.t.test(power = .80, delta = 1.7, sd=1.5, sig.level = 0.05, alternative = c("two.sided"))
+power.t.test(power = .90, delta = 1.7, sd=1.5, sig.level = 0.025, alternative = c("two.sided"))
+power.t.test(power = .80, delta = 1.7, sd=1.5, sig.level = 0.025, alternative = c("two.sided"))
 ```
 
 ## Problem 3
-
-```{r}
+Here is the **code chunk** to read the files. 
+```{r warning=FALSE,message=FALSE}
 knee_df = read_csv(file = "./data/Knee.csv") %>% 
   janitor::clean_names()
+```
+#1
+Here is the **code chunk** to generate descriptive statistics for each group. 
+```{r}
 summary(knee_df$below)
+sd(!is.na(knee_df$below))
 summary(knee_df$average)
+sd(!is.na(knee_df$average))
 summary(knee_df$above)
+sd(!is.na(knee_df$above))
+```
+From the vaue below, we could see the "below" group has the highest median and mean, while the "above" group has the slowest median and mean. The "above" group has the largest standard deviation 0.48 while the average has the standard deviation 0. 
 
+#2 
+Here is the **code chunk** to obtain the ANOVA table.
+The null hypothesis is all means of different groups are equal:
+H0: u1 = u2 = u3
+The corresponding alternative hypothesis is that not all means are equal:
+
+```{r}
 knee_df = gather(knee_df, key = type, value = value, below:above) %>% 
   filter(!is.na(value)) 
 knee_df$type=as_factor(knee_df$type)
-
 res <- aov(value~type,data = knee_df)
 summary(res)
-res
 qf(0.01, df1 = 2, df2 = 22)
 ```
+From the table, we are able to find that the p - value is 1.45e-05, which is significantly lower than 0.05. We reject the null hypothesis and conclude that there is enough evidence to show that at least two of the means are different.
 
-perform pairwise comparisons with the appropriate adjustments (Bonferroni, Tukey, and Dunnett – ‘below average’ as reference)
+#3
+Now we performed pairwise comparisons with the appropriate adjustments (Bonferroni, Tukey, and Dunnett – ‘below average’ as reference). Here is the **code chunk**:
 ```{r}
 pairwise.t.test(knee_df$value,knee_df$type,p.adjust.method = 'bonferroni')
 TukeyHSD(res)
-library(multcomp)
 dunnetttest<-glht(res, linfct=mcp(type="Dunnett"))
 summary(dunnetttest)
 ```
+\pagebreak
 
 ##Problem 4
-```{r}
-
+Here is the **code chunk** to load the data file and conduct data cleaning:
+```{r message = FALSE,warning = FALSE}
 library(datasets)
 data("UCBAdmissions")
 
 ucb_df <- as.data.frame(UCBAdmissions) %>% 
   janitor::clean_names() 
+```
 
-prop_men = sum(filter(ucb_df,gender=="Male", admit=="Admitted")$freq)/sum(filter(ucb_df,gender=="Male")$freq)
+#1 
+Here is the **code chunk** to provide point estimates and 95% CIs for the overall proportions of men and women admitted at Berkeley.  
 
-prop_women = sum(filter(ucb_df,gender=="Female", admit=="Admitted")$freq)/sum(filter(ucb_df,gender=="Female")$freq)
+```{r}
+num_men_total = sum(filter(ucb_df,gender=="Male")$freq)
+num_women_total = sum(filter(ucb_df,gender=="Female")$freq)
+num_men_admitted = sum(filter(ucb_df,gender=="Male", admit=="Admitted")$freq)
+num_women_admitted = sum(filter(ucb_df,gender=="Female", admit=="Admitted")$freq)
 
+prop_men = num_men_admitted / num_men_total
+prop_women = num_women_admitted / num_women_total
 
-
-
-
+prop.test(num_men_admitted,num_men_total, p=0.5)
+prop.test(num_women_admitted,num_women_total,p=0.5)
 
 ```
 
+From the data above, we could obtain that the point estimate for the overall proportion of men admitted at Berkeley is 0.45, the 95% confidence interval (0.42, 0.46). The point estimate for the overall proportion of women admitted at Berkey is 0.30, the 95% confidence interval is (0.28, 0.32). From the data above, we observe that there is no overlap of the two confidence interval, and we could make a strong guess that indeed there exists sex bias in admission practices. 
+
+#2
+Here is **code chunk** to perform a hypothesis test to assess if the two proportions in previous example are significantly different.
+The null hypothesis H0 is that p1=p2.
+The coressponding alternative hypothesis H1 is that p1 != p2. 
+
+```{r}
+res <- prop.test(x = c(num_men_admitted, num_women_admitted), n = c(num_men_total,num_women_total))
+res
+```
+
+From the data above, we could obtain the p-value is 2.2e-16, which is way smaller than 0.05. We reject the null hypothesis and conclude that there is enough evidence to show that there is sex bias in admission practices. 
 
 
 
