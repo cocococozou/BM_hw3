@@ -6,6 +6,12 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(multcomp)
+library(ggplot2)
+knitr::opts_chunk$set(
+  fig.width = 4.5,
+  fig.asp = .45,
+  out.width = "90%"
+)
 ```
 
 ##Problem 2
@@ -74,7 +80,15 @@ sd(knee_df $average, na.rm = T)
 summary(knee_df$above)
 sd(knee_df$above, na.rm = T)
 ```
-From the vaue below, we could see the "below" group has the highest median and mean, while the "above" group has the slowest median and mean. The "below" group has the largest standard deviation 5.48 while the average has the lowest standard deviation 3.92. 
+From the vaue below, we could see the "below" group has the highest median and mean, while the "above" group has the slowest median and mean. The "below" group has the largest standard deviation 5.48 while the average has the lowest standard deviation 3.92. The box - plot of the given three groups of data is shown below: 
+
+```{r}
+knee_df = gather(knee_df, key = type, value = value, below:above) %>% 
+  filter(!is.na(value)) 
+knee_df$type=as_factor(knee_df$type)
+ggplot(knee_df, aes(x = type, y = value)) + geom_boxplot()
+```
+
 
 #2 
 Here is the **code chunk** to obtain the ANOVA table.
@@ -83,9 +97,6 @@ H0: u1 = u2 = u3
 The corresponding alternative hypothesis is that not all means are equal:
 
 ```{r}
-knee_df = gather(knee_df, key = type, value = value, below:above) %>% 
-  filter(!is.na(value)) 
-knee_df$type=as_factor(knee_df$type)
 res <- aov(value~type,data = knee_df)
 summary(res)
 ``` 
