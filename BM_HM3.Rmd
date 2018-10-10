@@ -43,7 +43,7 @@ diff_heavy = heavysmoke_df$bmi_6yrs - heavysmoke_df$bmi_base
 diff_never = neversmoke_df$bmi_6yrs - neversmoke_df$bmi_base
 f_crit=qf(0.975,9,9)
 var.test(diff_heavy,diff_never,alternative = "two.sided")
-res = t.test(diff_heavy,diff_never,var.equal = FALSE, paired = FALSE)
+res = t.test(diff_heavy,diff_never,var.equal = TRUE, paired = FALSE)
 ```
 
 #4
@@ -62,19 +62,19 @@ power.t.test(power = .80, delta = 1.7, sd=1.5, sig.level = 0.025, alternative = 
 Here is the **code chunk** to read the files. 
 ```{r warning=FALSE,message=FALSE}
 knee_df = read_csv(file = "./data/Knee.csv") %>% 
-  janitor::clean_names()
+  janitor::clean_names() 
 ```
 #1
 Here is the **code chunk** to generate descriptive statistics for each group. 
 ```{r}
 summary(knee_df$below)
-sd(!is.na(knee_df$below))
+sd(knee_df $ below, na.rm = T)
 summary(knee_df$average)
-sd(!is.na(knee_df$average))
+sd(knee_df $average, na.rm = T)
 summary(knee_df$above)
-sd(!is.na(knee_df$above))
+sd(knee_df$above, na.rm = T)
 ```
-From the vaue below, we could see the "below" group has the highest median and mean, while the "above" group has the slowest median and mean. The "above" group has the largest standard deviation 0.48 while the average has the standard deviation 0. 
+From the vaue below, we could see the "below" group has the highest median and mean, while the "above" group has the slowest median and mean. The "below" group has the largest standard deviation 5.48 while the average has the lowest standard deviation 3.92. 
 
 #2 
 Here is the **code chunk** to obtain the ANOVA table.
@@ -88,18 +88,33 @@ knee_df = gather(knee_df, key = type, value = value, below:above) %>%
 knee_df$type=as_factor(knee_df$type)
 res <- aov(value~type,data = knee_df)
 summary(res)
-qf(0.01, df1 = 2, df2 = 22)
-```
-From the table, we are able to find that the p - value is 1.45e-05, which is significantly lower than 0.05. We reject the null hypothesis and conclude that there is enough evidence to show that at least two of the means are different.
+``` 
+From the table, we are able to find that the p - value is 1.45e-05, which is significantly lower than 0.05. We reject the null hypothesis and conclude that there is enough evidence to show that at least two of the means from the three groups "above", "below" and "average" are different.
 
 #3
 Now we performed pairwise comparisons with the appropriate adjustments (Bonferroni, Tukey, and Dunnett – ‘below average’ as reference). Here is the **code chunk**:
 ```{r}
 pairwise.t.test(knee_df$value,knee_df$type,p.adjust.method = 'bonferroni')
+```
+The bonferroni test tends to compare samples with each other. From the data above, we can obtain the p-value from each comparison. The p-value of comparison between "average" and "below" is larger than 0.05, therefore we could not reject the null hypothesis and conclude that the mean of average and below groups is not different. Moreover, the p-value of comparison between "above" and "below" groups, and comparison between "average" and "above" groups, are less than 0.05, therefore we could reject the null hypothesis and conclude that the mean of average and above group is different, and the mean of above and below group is also different.
+
+```{r}
 TukeyHSD(res)
+```
+The Tukey test also compare all possible pairs. From the data above, we find out that the means of "average - below" is same, while the means of "above - below" and "above - average" are different.
+
+
+```{r}
 dunnetttest<-glht(res, linfct=mcp(type="Dunnett"))
 summary(dunnetttest)
 ```
+The dunnett test compare all other samples with one sample, in our case, the "below" group. From the data above, we conclude that the means of "average - below" are the same while the "above - below" are different. 
+
+From the three tests above, we could see that Bonferroni and Tukey compared all possible pairs, while Dunnett need one pre - specified group to compare with all other samples. The bonferroni adjustment is the most conservative, since it adjusted to dicrease $\alpha$ value, which makes it difficult to reject the null hypothesis and therefore decrease the power the test. 
+
+#4
+In conclusion, we perform the ANOVA test and following three adjustments (Benferroni, Tukey, and Dunnett) to analyze the relationship between physical status before therapy and the time (days) required in physical therapy until successful rehabilitation. The ANOVA indicates that at least the means of the two samples are different. The following adjustment indicates that it is the means of "above - below" and "above - average" are different.
+
 \pagebreak
 
 ##Problem 4
